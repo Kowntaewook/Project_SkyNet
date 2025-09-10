@@ -7,11 +7,10 @@ import argparse
 import pandas as pd
 import numpy as np
 
-
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report
 import joblib
 
 # 아직 안 쓰는데 혹시 몰라서 남겨둠 (not used yet but just in case)
@@ -19,7 +18,8 @@ import matplotlib.pyplot as plt
 
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import layers
+from keras import layers   # 수정됨
+
 
 # 데이터 로딩 및 기본 처리 (Data loading and basic processing)
 def load_and_prepare(csv_path):
@@ -43,16 +43,15 @@ def load_and_prepare(csv_path):
 
     return X, y, le
 
+
 # Random Forest baseline
 def run_random_forest(X_train, X_test, y_train, y_test, out_dir):
-    rf_model = RandomForestClassifier(n_estimators=120, n_jobs=-1, random_state=42) # 100 보다 좀 높혀봄
+    rf_model = RandomForestClassifier(n_estimators=120, n_jobs=-1, random_state=42)
     rf_model.fit(X_train, y_train)
     preds = rf_model.predict(X_test)
 
     print("==== Random 결과 ====")
     print(classification_report(y_test, preds))
-    # confusion matrix 생략 사유 : 귀찮음
-    # print(confusion_matrix(y_test, preds))
 
     joblib.dump(rf_model, os.path.join(out_dir, 'rf_model.joblib'))
     return rf_model
@@ -75,6 +74,7 @@ def make_cnn(input_shape, num_classes):
                     metrics=["accuracy"])
     return cnn_net
 
+
 # LSTM 모델 정의 (LSTM model definition)
 def make_lstm(input_shape, num_classes):
     lstm_model = Sequential([
@@ -95,20 +95,20 @@ def train_dl_models(X_train, X_test,y_train, y_test, out_dir):
     input_shape = (X_train.shape[1],)
     num_classes = len(np.unique(y_train))
 
-    
-    #CNN
+    # CNN
     cnn_model = make_cnn(input_shape, num_classes)
     cnn_model.fit(X_train, y_train, epochs=20, batch_size=64, validation_split=0.2, verbose=2)
     cnn_model.save(os.path.join(out_dir, 'cnn_model'))
     print("CNN Test Eval:", cnn_model.evaluate(X_test, y_test))
 
-    #LSTM
+    # LSTM
     lstm_model = make_lstm(input_shape, num_classes)
     lstm_model.fit(X_train, y_train, epochs=20, batch_size=64, validation_split=0.2, verbose=2)
     lstm_model.save(os.path.join(out_dir, 'lstm_model'))
     print("LSTM test 결과:", lstm_model.evaluate(X_test, y_test))
 
     return cnn_model, lstm_model
+
 
 def main(flows_csv, out_dir):
     os.makedirs(out_dir, exist_ok=True)
@@ -120,7 +120,7 @@ def main(flows_csv, out_dir):
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    # 스케일링 (DL은 상관 없음 RF는 필요) (Scaling (not related to DL but RF needs))
+    # 스케일링 (Scaling)
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
@@ -136,10 +136,12 @@ def main(flows_csv, out_dir):
     joblib.dump(le, os.path.join(out_dir, 'label_encoder.joblib'))
     print(f"학습 완료 결과는 {out_dir}에 저장됨") 
 
-    if __name__ == "__main__":
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--flows", required=True, help="flows.csv 파일 경로")
-        parser.add_argument("--out_dir", default="results", help="출력 결과 폴더")
-        args = parser.parse_args()
-    
-        main(args.flows, args.out_dir)
+
+# main 함수 밖으로 이동
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--flows", required=True, help="flows.csv 파일 경로")
+    parser.add_argument("--out_dir", default="results", help="출력 결과 폴더")
+    args = parser.parse_args()
+
+    main(args.flows, args.out_dir)
