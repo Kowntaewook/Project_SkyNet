@@ -1,5 +1,5 @@
 #preprocess.py
-# This is my personal project, so my code may not be perfect.
+# 개인 포폴용 This is my personal project, so my code may not be perfect.
 # note: this is for personal potofolio made by little ChatGPT and ME (Kwontaewook)
 
 import os
@@ -137,6 +137,18 @@ def main(pcap_dir, out_csv, label_map_file=None):
             })
 
             all_records.append(stats)
+    df = pd.DataFrame(all_records)
+    df.to_csv(out_csv, index=False)
+    print(f"+ 총 {len(df)}개의 flow를 {out_csv}에 저장 완료")
+
+if __name__ == "__main__":
+    argp = argparse.ArgumentParser()
+    argp.add_argument("--pcap_dir", type=str, required=True, help="pcap 파일들이 있는 폴더")
+    argp.add_argument("--out-csv", type=str, required=True, help="출력 csv 파일 경로")
+    argp.add_argument("--label-map", type=str, default="label map", required=False, help="json 레이블 파일")
+    args = argp.parse_args()
+
+    main(args.pcap_dir, args.out_csv, args.label_map)
 
     
 
