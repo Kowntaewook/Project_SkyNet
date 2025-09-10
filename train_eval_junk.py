@@ -98,3 +98,48 @@ def train_dl_models(X_train, X_test,y_train, y_test, out_dir):
     
     #CNN
     cnn_model = make_cnn(input_shape, num_classes)
+    cnn_model.fit(X_train, y_train, epochs=20, batch_size=64, validation_split=0.2, verbose=2)
+    cnn_model.save(os.path.join(out_dir, 'cnn_model'))
+    print("CNN Test Eval:", cnn_model.evaluate(X_test, y_test))
+
+    #LSTM
+    lstm_model = make_lstm(input_shape, num_classes)
+    lstm_model.fit(X_train, y_train, epochs=20, batch_size=64, validation_split=0.2, verbose=2)
+    lstm_model.save(os.path.join(out_dir, 'lstm_model'))
+    print("LSTM test 결과:", lstm_model.evaluate(X_test, y_test))
+
+    return cnn_model, lstm_model
+
+def main(flows_csv, out_dir):
+    os.makedirs(out_dir, exist_ok=True)
+
+    X, y, le = load_and_prepare(flows_csv)
+
+    # 데이터 분리 (Data splitting)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+
+    # 스케일링 (DL은 상관 없음 RF는 필요) (Scaling (not related to DL but RF needs))
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+    joblib.dump(scaler, os.path.join(out_dir, 'scaler.joblib'))
+
+    # baseline RF
+    run_random_forest(X_train, X_test, y_train, y_test, out_dir)
+
+    # DL 모델 학습 (DL model training)
+    train_dl_models(X_train, X_test, y_train, y_test, out_dir)
+
+    # 라벨 인코더 저장 추후 예측 할때 필요 (Save label encoder for later prediction)
+    joblib.dump(le, os.path.join(out_dir, 'label_encoder.joblib'))
+    print(f"학습 완료 결과는 {out_dir}에 저장됨") 
+
+    if __name__ == "__main__":
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--flows", required=True, help="flows.csv 파일 경로")
+        parser.add_argument("--out_dir", default="results", help="출력 결과 폴더")
+        args = parser.parse_args()
+    
+        main(args.flows, args.out_dir)
