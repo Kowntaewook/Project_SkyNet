@@ -53,6 +53,10 @@ def run_random_forest(X_train, X_test, y_train, y_test, out_dir):
     print("==== Random 결과 ====")
     print(classification_report(y_test, preds))
 
+    # 결과 택스트 파일로 저장 (Save results to text file)
+    with open(os.path.join(out_dir, 'rf_classification_report.txt'), 'w') as f:
+        f.write(classification_report(y_test, preds))
+
     joblib.dump(rf_model, os.path.join(out_dir, 'rf_model.joblib'))
     return rf_model
 
@@ -90,22 +94,34 @@ def make_lstm(input_shape, num_classes):
     return lstm_model
 
 
-# DL 학습 함수 (CNN + LSTM 둘다 돌림) (DL training function (both CNN + LSTM))
-def train_dl_models(X_train, X_test,y_train, y_test, out_dir):
+# DL 학습 함수 (CNN + LSTM 둘다 돌림)
+def train_dl_models(X_train, X_test, y_train, y_test, out_dir):
     input_shape = (X_train.shape[1],)
     num_classes = len(np.unique(y_train))
 
     # CNN
     cnn_model = make_cnn(input_shape, num_classes)
     cnn_model.fit(X_train, y_train, epochs=20, batch_size=64, validation_split=0.2, verbose=2)
-    cnn_model.save(os.path.join(out_dir, 'cnn_model'))
-    print("CNN Test Eval:", cnn_model.evaluate(X_test, y_test))
+    cnn_model.save(os.path.join(out_dir, 'cnn_model.h5'))
+
+    cnn_eval = cnn_model.evaluate(X_test, y_test, verbose=0)
+    print("CNN Test Eval:", cnn_eval)
+
+    with open(os.path.join(out_dir, 'cnn_report.txt'), 'w') as f:
+        f.write(f"CNN Test Loss: {cnn_eval[0]}\n")
+        f.write(f"CNN Test Accuracy: {cnn_eval[1]}\n")
 
     # LSTM
     lstm_model = make_lstm(input_shape, num_classes)
     lstm_model.fit(X_train, y_train, epochs=20, batch_size=64, validation_split=0.2, verbose=2)
-    lstm_model.save(os.path.join(out_dir, 'lstm_model'))
-    print("LSTM test 결과:", lstm_model.evaluate(X_test, y_test))
+    lstm_model.save(os.path.join(out_dir, 'lstm_model.h5'))
+
+    lstm_eval = lstm_model.evaluate(X_test, y_test, verbose=0)
+    print("LSTM Test Eval:", lstm_eval)
+
+    with open(os.path.join(out_dir, 'lstm_report.txt'), 'w') as f:
+        f.write(f"LSTM Test Loss: {lstm_eval[0]}\n")
+        f.write(f"LSTM Test Accuracy: {lstm_eval[1]}\n")
 
     return cnn_model, lstm_model
 
