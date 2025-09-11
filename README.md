@@ -14,7 +14,7 @@
 본 프로젝트에서는 공개 데이터셋과 직접 수집한 데이터셋을 모두 활용했습니다.
 
 - **공개 데이터셋**
-  - CICIDS2017 (Friday-WorkingHour-Moning, Thursday-WorkingHour-Moning 데이터만 사용)
+  - CICIDS2017 (Friday-WorkingHours-Moning, Thursday-WorkingHours-Moning 데이터만 사용)
   - UNSW-NB15
 - **자체 수집 데이터셋**
   - 가상 환경(VM)에서 Port Scan, DoS, Brute-force 공격 패킷 캡처
