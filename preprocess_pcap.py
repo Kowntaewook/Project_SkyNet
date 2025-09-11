@@ -137,9 +137,15 @@ def main(pcap_dir, out_csv, label_map_file=None):
             })
 
             all_records.append(stats)
+
     df = pd.DataFrame(all_records)
     df.to_csv(out_csv, index=False)
     print(f"+ 총 {len(df)}개의 flow를 {out_csv}에 저장 완료")
+
+    # parquet도 추가 저장
+    parquet_path = out_csv.replace(".csv", ".parquet")
+    df.to_parquet(parquet_path, index=False)
+    print(f"+ parquet 형식으로도 저장됨: {parquet_path}")
 
 if __name__ == "__main__":
     argp = argparse.ArgumentParser()

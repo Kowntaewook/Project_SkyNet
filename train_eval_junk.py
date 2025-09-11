@@ -25,8 +25,11 @@ from keras import layers   # 수정됨
 def load_and_prepare(csv_path):
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"CSV 파일 없음: {csv_path}")
-
-    df = pd.read_csv(csv_path)
+    
+    if csv_path.endswith(".parquet"):
+        df = pd.read_parquet(csv_path)
+    else:
+        df = pd.read_csv(csv_path)
 
     if 'label' not in df.columns:
         raise ValueError("CSV 파일에 'label' column이 반드시 필요합니다.")
@@ -50,8 +53,10 @@ def run_random_forest(X_train, X_test, y_train, y_test, out_dir):
     rf_model.fit(X_train, y_train)
     preds = rf_model.predict(X_test)
 
+    report_str = classification_report(y_test, preds)
+
     print("==== Random 결과 ====")
-    print(classification_report(y_test, preds))
+    print(report_str)
 
     # 결과 택스트 파일로 저장 (Save results to text file)
     with open(os.path.join(out_dir, 'rf_classification_report.txt'), 'w') as f:
@@ -156,8 +161,8 @@ def main(flows_csv, out_dir):
 # main 함수 밖으로 이동
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--flows", required=True, help="flows.csv 파일 경로")
+    parser.add_argument("--data", required=True, help="데이터 파일 경로 (csv 또는 parquet)")
     parser.add_argument("--out_dir", default="results", help="출력 결과 폴더")
     args = parser.parse_args()
 
-    main(args.flows, args.out_dir)
+    main(args.data, args.out_dir)
